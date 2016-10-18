@@ -26,13 +26,13 @@ import charmhelpers.contrib.openstack.amulet.utils as os_amulet_utils
 u = os_amulet_utils.OpenStackAmuletUtils(os_amulet_utils.DEBUG)
 
 
-class SDNCharmDeployment(amulet_deployment.OpenStackAmuletDeployment):
+class MistralBasicDeployment(amulet_deployment.OpenStackAmuletDeployment):
     """Amulet tests on a basic sdn_charm deployment."""
 
     def __init__(self, series, openstack=None, source=None, stable=False):
         """Deploy the entire test environment."""
-        super(SDNCharmDeployment, self).__init__(series, openstack,
-                                                       source, stable)
+        super(MistralBasicDeployment, self).__init__(series, openstack,
+                                                     source, stable)
         self._add_services()
         self._add_relations()
         self._configure_services()
@@ -51,63 +51,35 @@ class SDNCharmDeployment(amulet_deployment.OpenStackAmuletDeployment):
            and the rest of the service are from lp branches that are
            compatible with the local charm (e.g. stable or next).
            """
-        this_service = {'name': 'sdn_charm'}
+        this_service = {'name': 'mistral'}
         other_services = [
-            {
-                'name': 'nova-compute',
-                'constraints': {'mem': '4G'},
-            },
-            {
-                'name': 'neutron-api',
-            },
-            {
-                'name': 'neutron-gateway',
-            },
             {'name': 'mysql'},
             {'name': 'rabbitmq-server'},
             {'name': 'keystone'},
-            {'name': 'nova-cloud-controller'},
             {'name': 'glance'},
         ]
-        super(SDNCharmDeployment, self)._add_services(this_service,
-                                                      other_services)
+        super(MistralBasicDeployment, self)._add_services(this_service,
+                                                          other_services)
 
     def _add_relations(self):
         """Add all of the relations for the services."""
         relations = {
-            'nova-compute:neutron-plugin': 'sdn_charm:neutron-plugin',
             'keystone:shared-db': 'mysql:shared-db',
-            'nova-cloud-controller:shared-db': 'mysql:shared-db',
-            'nova-cloud-controller:amqp': 'rabbitmq-server:amqp',
-            'nova-cloud-controller:image-service': 'glance:image-service',
-            'nova-cloud-controller:identity-service':
-            'keystone:identity-service',
-            'nova-compute:cloud-compute':
-            'nova-cloud-controller:cloud-compute',
-            'nova-compute:amqp': 'rabbitmq-server:amqp',
-            'nova-compute:image-service': 'glance:image-service',
             'glance:shared-db': 'mysql:shared-db',
             'glance:identity-service': 'keystone:identity-service',
             'glance:amqp': 'rabbitmq-server:amqp',
-            'neutron-api:shared-db': 'mysql:shared-db',
-            'neutron-api:amqp': 'rabbitmq-server:amqp',
-            'neutron-api:neutron-api': 'nova-cloud-controller:neutron-api',
-            'neutron-api:identity-service': 'keystone:identity-service',
-            'neutron-gateway:amqp': 'rabbitmq-server:amqp',
-            'neutron-gateway:neutron-plugin-api':
-            'neutron-api:neutron-plugin-api',
-            'neutron-gateway:quantum-network-service':
-            'nova-cloud-controller:quantum-network-service',
-            'neutron-gateway:juju-info': 'sdn_charm:container',
+            'mistral:shared-db': 'mysql:shared-db',
+            'mistral:identity-service': 'keystone:identity-service',
+            'mistral:amqp': 'rabbitmq-server:amqp',
         }
-        super(SDNCharmDeployment, self)._add_relations(relations)
+        super(MistralBasicDeployment, self)._add_relations(relations)
 
     def _configure_services(self):
         """Configure all of the services."""
         keystone_config = {'admin-password': 'openstack',
                            'admin-token': 'ubuntutesting'}
         configs = {'keystone': keystone_config}
-        super(SDNCharmDeployment, self)._configure_services(configs)
+        super(MistralBasicDeployment, self)._configure_services(configs)
 
     def _get_token(self):
         return self.keystone.service_catalog.catalog['token']['id']
@@ -115,11 +87,11 @@ class SDNCharmDeployment(amulet_deployment.OpenStackAmuletDeployment):
     def _initialize_tests(self):
         """Perform final initialization before tests get run."""
         # Access the sentries for inspecting service units
-        self.sdn_charm_sentry = self.d.sentry['sdn_charm'][0]
+        self.mistral_charm_sentry = self.d.sentry['sdn_charm'][0]
         self.mysql_sentry = self.d.sentry['mysql'][0]
         self.keystone_sentry = self.d.sentry['keystone'][0]
         self.rabbitmq_sentry = self.d.sentry['rabbitmq-server'][0]
-        self.sdn_charm_svcs = [
+        self.mistral_charm_svcs = [
             'sdn_charm-agent', 'sdn_charm-api']
 
         # Authenticate admin with keystone endpoint
