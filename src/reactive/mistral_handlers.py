@@ -42,6 +42,7 @@ def horrible_hack_to_workaround_missing_package_files():
         '/usr/lib/python2.7/dist-packages/mistral/actions/openstack/mapping.json')
 
 
+@reactive.when('charm.installed')
 @reactive.when_not('config.rendered')
 def mask_svc():
     mistral_svcs = ['mistral-api', 'mistral-engine', 'mistral-executor']
