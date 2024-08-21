@@ -1,9 +1,0 @@
-build
-layers
-.tox
-interfaces
-builds
-deps
-.testrepository
-__pycache__
-*.pyc
